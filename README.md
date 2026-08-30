@@ -13,6 +13,19 @@
 
 ---
 
+## 🔗 Live Demo
+
+| Access | URL |
+| --- | --- |
+| **Public (any network)** | **[https://quarry-bankroll-juicy.ngrok-free.dev](https://quarry-bankroll-juicy.ngrok-free.dev)** |
+| Local (this machine) | http://localhost:50861/ |
+| LAN (same network) | http://192.168.31.183:50861/ |
+
+> **Demo login:** `demo@legacy.store` / `Password123!` — coupon code `SAVE10` gives −10%.
+> The public URL comes from an `ngrok http 50861` tunnel; it **changes every time the tunnel restarts**, so regenerate it before each demo.
+
+---
+
 ## 📌 Overview
 
 Server-side rendered MVC 5 application with Razor `.cshtml` templates generating full HTML pages. jQuery (3.4.1) enhances the UX via AJAX — cart updates, product filtering and lazy category trees — without any SPA framework. Data access is Entity Framework 6 (Repository + UnitOfWork) against **SQL Server Express**, hosted on **IIS Express** for local development and full **IIS** (CLR v4.0 integrated app pool) for production. Dependency wiring uses the **Unity DI container**.
