@@ -5,7 +5,7 @@
     var primary = images.FirstOrDefault(i => i.IsPrimary) ?? images.FirstOrDefault();
 }
 @section Styles {
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" rel="stylesheet" />
+    @Styles.Render("~/Content/fancybox")
 }
 
 <ol class="breadcrumb">
@@ -86,7 +86,7 @@
 }
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+    @Scripts.Render("~/bundles/fancybox")
     <script>
         $(function () {
             $('[data-fancybox="gallery"]').fancybox();

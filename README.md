@@ -176,9 +176,34 @@ Order history is available after signing in (`/Account/Orders`).
   DataTables 1.10.21, Fancybox 3.5.7) are vendored under `Scripts/` and
   `Content/` so the site runs offline.
 
+## Specification coverage
+
+Implements the `NET 4.7 MVC eCommerce Legacy-MVC-EF-Sessions-class-plan-Specification.txt` point by point:
+
+| Spec requirement | Where in code |
+| --- | --- |
+| 4-project layering with strict dependency direction | `Ecommerce.Core` (POCOs/interface/ViewModels) ← `Data` ← `Services` ← `Web` |
+| Controllers never touch EF; views bind to ViewModels only | `Controllers/*` + `Views/*` bind `Ecommerce.Core.ViewModels` |
+| Repository pattern + `UnitOfWork` over EF6 | `Ecommerce.Data` |
+| Unity DI, DbContext/repos per HTTP request | `App_Start/UnityConfig.cs` |
+| Razor layout tree `_Layout → _Header / _Sidebar / _Footer` | `Views/Shared/` |
+| Catalog: listing, detail, search, lazy category AJAX | `ProductController`, `Views/Product/` |
+| Session cart + `MiniCart` child action + AJAX add/update/remove/coupon | `CartController`, `Views/Cart/`, `_Layout` |
+| Checkout wizard Address → Shipping → Payment → Confirmation | `CheckoutController`, `Views/Checkout/` |
+| OWIN cookie auth, `[Authorize]`, order history | `AccountController`, `Startup.Auth.cs`, `Views/Account/` |
+| Anti-forgery tokens on every form + every AJAX POST (field & header) | `AjaxValidateAntiForgeryToken`, `@Html.AntiForgeryToken()` in all forms |
+| jQuery 3.4.1, jQuery UI 1.12.1, Validate + Unobtrusive, DataTables, Fancybox 3 — all vendored for offline use | `Scripts/`, `Content/`, `BundleConfig.cs` |
+| SQL Express `.\SQLEXPRESS`, DB `LegacyEcommerceDb`, conn `EcommerceDb`, `legacy_app_user` | `web.config`, `DatabaseSetup.sql` |
+| `sessionState InProc timeout=25`, `maxRequestLength=30720`, `compilation debug=false`, `authentication mode=None` | `web.config` |
+
 ## Notes / deviations from a stock MVC 5 template
 
-- No `Microsoft.AspNet.Identity` — OWIN cookie auth + custom `IAccountService`.
+- No `Microsoft.AspNet.Identity` — OWIN cookie auth + custom `IAccountService`
+  (spec's "ApplicationUser stays in Web" is implemented as a lightweight
+  `ClaimsIdentity`; same wire surface, cleaner to migrate later).
+- EF6 mappings are **code-first** (`EcommerceDbContext`, annotations) instead of
+  the spec's EDMX designer file — the schema is identical and `DatabaseSetup.sql`
+  is the source of truth; no `.edmx`/designer codegen to carry forward.
 - DataTables pinned to 1.10.21 (newer 1.10.25 was not available from the CDN).
 - Package versions are pinned; NuGet reports `NU1903` warnings for old
   Microsoft.Owin/Newtonsoft.Json versions (no safe upgrade path for .NET
