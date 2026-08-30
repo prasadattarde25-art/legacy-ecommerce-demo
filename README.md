@@ -16,6 +16,52 @@ authentication.
 `DatabaseSetup.sql` (solution root) creates the database, tables, indexes,
 the application login, seed catalog data, and the demo customer.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    B[Browser] --> C[MVC Controllers<br/><i>Ecommerce.Web</i>]
+    C --> V[Razor Views + ViewModels]
+    C --> SVC[Services<br/><i>Ecommerce.Services</i>]
+    SVC --> REPO[Repositories + UnitOfWork<br/><i>Ecommerce.Data</i>]
+    REPO --> DC[EF6 EcommerceDbContext]
+    DC --> DB[(SQL Server Express<br/><i>LegacyEcommerceDb</i>)]
+    SVC --> CORE
+    REPO --> CORE
+    C --> CORE
+    CORE[CORE<br/><i>Ecommerce.Core</i><br/>Entities / Interfaces / ViewModels]
+    style CORE fill:#f4f4f4,stroke:#666
+    style SVC fill:#eaf2fa,stroke:#79c
+    style REPO fill:#eaf2fa,stroke:#79c
+    style DC fill:#eaf2fa,stroke:#79c
+    style DB fill:#fdf6e3,stroke:#b50
+```
+
+**Dependency direction:** every layer depends on `Ecommerce.Core` (POCO
+entities, ViewModels, repository/service interfaces — no framework
+dependencies). `Ecommerce.Data` implements repositories over EF6;
+`Ecommerce.Services` implements business rules (pricing, cart, checkout,
+PBKDF2 hashing, authentication); `Ecommerce.Web` is the MVC 5 UI that wires
+everything together with Unity IoC.
+
+**How a request flows:** Browser → MVC route → Controller (services injected
+via Unity) → Service → Repository/`UnitOfWork` → `EcommerceDbContext` → SQL
+Express → result returned as a Razor view or JSON over AJAX.
+
+**Cross-cutting wiring:**
+
+- Unity registers `EcommerceDbContext` and `UnitOfWork` per HTTP request
+  (`HierarchicalLifetimeManager`) so repositories share one context per
+  request and `SaveChanges()` commits a single unit of work.
+- OWIN cookie authentication (`ApplicationCookie`) issues a
+  `ClaimsIdentity`; passwords are hashed with PBKDF2 (10,000 iterations).
+- The cart is session-based (`List<CartItem>` in `HttpSessionState`); coupon
+  code lives in session too. A `CartItems` table keyed by `Guid` exists in
+  the schema for future persistence.
+- AJAX posts (cart add/update/remove, coupon) are protected by anti-forgery
+  tokens sent as form fields; the `AjaxValidateAntiForgeryToken` filter also
+  accepts them via HTTP header for browser compatibility.
+
 ## Prerequisites
 
 - Windows with .NET Framework 4.7+ (4.8 recommended).
