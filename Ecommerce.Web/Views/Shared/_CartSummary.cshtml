@@ -1,0 +1,30 @@
+@model Ecommerce.Core.ViewModels.CartViewModel
+<div class="panel panel-default cart-summary">
+    <div class="panel-heading">
+        <span class="glyphicon glyphicon-shopping-cart"></span> Order Summary
+    </div>
+    <table class="table">
+        <tbody>
+            @foreach (var line in Model.Lines)
+            {
+                <tr>
+                    <td>
+                        @line.ProductName
+                        <small class="text-muted">&times; @line.Quantity</small>
+                    </td>
+                    <td class="text-right">@line.LineTotal.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr><th class="text-right">Subtotal</th><td class="text-right">@Model.Subtotal.ToString("C")</td></tr>
+            @if (Model.Discount > 0)
+            {
+                <tr><th class="text-right">Discount</th><td class="text-right">-@Model.Discount.ToString("C")</td></tr>
+            }
+            <tr><th class="text-right">Shipping</th><td class="text-right">@Model.ShippingTotal.ToString("C")</td></tr>
+            <tr><th class="text-right">Tax</th><td class="text-right">@Model.TaxTotal.ToString("C")</td></tr>
+            <tr class="summary-total"><th class="text-right">Total</th><td class="text-right"><strong>@Model.GrandTotal.ToString("C")</strong></td></tr>
+        </tfoot>
+    </table>
+</div>

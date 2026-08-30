@@ -1,0 +1,16 @@
+@model Ecommerce.Core.ViewModels.ProductCardViewModel
+<div class="product-card panel panel-default">
+    <div class="panel-body">
+        <a href="@Url.Action("Detail", "Product", new { id = Model.Id })" title="@Model.Name">
+            <img src="@Model.ThumbnailUrl" alt="@Model.Name" class="product-thumb" />
+            <h4 class="product-name">@Model.Name</h4>
+        </a>
+        @if (Model.ListPrice.HasValue && Model.ListPrice > Model.Price)
+        {
+            <span class="price price-old">@Model.ListPrice.Value.ToString("C")</span>
+        }
+        <span class="price">@Model.Price.ToString("C")</span>
+        <button type="button" class="add-to-cart-btn btn btn-primary btn-block"
+                data-product-id="@Model.Id">Add to Cart</button>
+    </div>
+</div>

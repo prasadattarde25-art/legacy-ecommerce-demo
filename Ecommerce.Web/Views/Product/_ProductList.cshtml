@@ -1,0 +1,31 @@
+@model Ecommerce.Core.ViewModels.ProductListViewModel
+
+@if (Model.Products.Count == 0)
+{
+    <p class="text-muted">No products match your search.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var product in Model.Products)
+        {
+            <div class="col-md-4 col-sm-6">
+                @Html.Partial("_ProductCard", product)
+            </div>
+        }
+    </div>
+
+    if (Model.PagedResult.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination">
+                @for (var i = 1; i <= Model.PagedResult.TotalPages; i++)
+                {
+                    <li class="@(i == Model.Page ? "active" : "")">
+                        <a href="@Url.Action("Index", "Product", new { categoryId = Model.CategoryId, q = Model.Query, page = i })">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

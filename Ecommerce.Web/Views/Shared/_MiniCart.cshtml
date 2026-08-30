@@ -1,0 +1,7 @@
+@model Ecommerce.Core.ViewModels.MiniCartViewModel
+<a href="@Url.Action("Index", "Cart")" class="btn btn-default navbar-btn">
+    <span class="glyphicon glyphicon-shopping-cart"></span>
+    Cart
+    <span id="mini-cart-count" class="badge">@Model.ItemCount</span>
+    <span id="mini-cart-total">@Model.Subtotal.ToString("C")</span>
+</a>

@@ -1,0 +1,66 @@
+@model Ecommerce.Core.ViewModels.CartViewModel
+<table class="table table-striped cart-table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var line in Model.Lines)
+        {
+            <tr>
+                <td>
+                    <a href="@Url.Action("Detail", "Product", new { id = line.ProductId })">@line.ProductName</a>
+                    <br /><small class="text-muted">@line.Sku</small>
+                </td>
+                <td>@line.UnitPrice.ToString("C")</td>
+                <td>
+                    <div class="input-group input-group-sm" style="width: 180px;">
+                        <input type="number" id="qty-@line.ProductId" value="@line.Quantity" min="0" class="form-control" />
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-default cart-update-btn" data-product-id="@line.ProductId">Update</button>
+                        </span>
+                    </div>
+                </td>
+                <td>@line.LineTotal.ToString("C")</td>
+                <td>
+                    <button type="button" class="btn btn-xs btn-danger cart-remove-btn" data-product-id="@line.ProductId">Remove</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="3" class="text-right">Subtotal</th>
+            <td>@Model.Subtotal.ToString("C")</td>
+            <td></td>
+        </tr>
+        @if (Model.Discount > 0)
+        {
+            <tr>
+                <th colspan="3" class="text-right">Discount (@Model.CouponCode)</th>
+                <td>-@Model.Discount.ToString("C")</td>
+                <td></td>
+            </tr>
+        }
+        <tr>
+            <th colspan="3" class="text-right">Shipping</th>
+            <td>@Model.ShippingTotal.ToString("C")</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th colspan="3" class="text-right">Tax (8%)</th>
+            <td>@Model.TaxTotal.ToString("C")</td>
+            <td></td>
+        </tr>
+        <tr class="summary-total">
+            <th colspan="3" class="text-right">Total</th>
+            <td><strong>@Model.GrandTotal.ToString("C")</strong></td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>

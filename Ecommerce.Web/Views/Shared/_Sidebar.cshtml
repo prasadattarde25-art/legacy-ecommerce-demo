@@ -1,0 +1,16 @@
+@model IList<Ecommerce.Core.Entities.Category>
+<div class="panel panel-default sidebar">
+    <div class="panel-heading">
+        <span class="glyphicon glyphicon-th-list"></span> Categories
+    </div>
+    <ul class="list-group category-tree">
+        @foreach (var cat in Model)
+        {
+            <li class="list-group-item category-node" data-id="@cat.Id">
+                <a href="@Url.Action("Index", "Product", new { categoryId = cat.Id })" class="category-link">@cat.Name</a>
+                <a href="#" class="category-toggle pull-right">&raquo;</a>
+                <ul class="category-children"></ul>
+            </li>
+        }
+    </ul>
+</div>

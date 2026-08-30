@@ -1,0 +1,12 @@
+@model System.Web.Mvc.HandleErrorInfo
+@{
+    ViewBag.Title = "Error";
+}
+<div class="jumbotron">
+    <h1>Oops!</h1>
+    <p class="lead">Something went wrong while processing your request. Please try again.</p>
+    @if (Request.IsLocal && Model != null)
+    {
+        <pre class="text-danger">@Model.Exception</pre>
+    }
+</div>

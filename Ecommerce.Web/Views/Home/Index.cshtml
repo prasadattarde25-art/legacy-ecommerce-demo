@@ -1,0 +1,19 @@
+@model IList<Ecommerce.Core.ViewModels.ProductCardViewModel>
+@{
+    ViewBag.Title = "Home";
+}
+<div class="jumbotron store-hero">
+    <h1>Legacy Store</h1>
+    <p>A classic .NET 4.7 MVC 5 eCommerce demo &mdash; Razor server-side rendering with a jQuery front-end and EF 6 on SQL Server Express.</p>
+    <p><a class="btn btn-primary btn-lg" href="@Url.Action("Index", "Product")">Shop Now &raquo;</a></p>
+</div>
+
+<h2>Featured Products</h2>
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-3 col-sm-4">
+            @Html.Partial("_ProductCard", product)
+        </div>
+    }
+</div>

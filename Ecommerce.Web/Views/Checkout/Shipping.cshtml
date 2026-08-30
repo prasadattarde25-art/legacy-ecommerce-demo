@@ -1,0 +1,56 @@
+@model Ecommerce.Core.ViewModels.CheckoutShippingViewModel
+@{
+    ViewBag.Title = "Checkout - Shipping";
+    ViewBag.FullWidth = true;
+    var cart = ViewBag.Cart as Ecommerce.Core.ViewModels.CartViewModel;
+}
+<h1>Checkout</h1>
+
+<ul class="nav nav-pills checkout-steps">
+    <li><a href="@Url.Action("Address")">1. Address</a></li>
+    <li class="active"><a href="#">2. Shipping</a></li>
+    <li class="disabled"><a href="#">3. Payment</a></li>
+</ul>
+
+<div class="row">
+    <div class="col-md-7">
+        <h3>Shipping Method</h3>
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="list-group">
+                @foreach (var method in new[]
+                {
+                    new { Value = "Standard", Label = "Standard (~5-7 business days)", Price = cart.ShippingTotal == 0 ? "Free" : "$9.95" },
+                    new { Value = "Express", Label = "Express (2-3 business days)", Price = "$19.95" }
+                })
+                {
+                    <label class="list-group-item">
+                        @Html.RadioButtonFor(m => m.ShippingMethod, method.Value)
+                        <span class="shipping-method-label">@method.Label</span>
+                        <span class="pull-right">@method.Price</span>
+                    </label>
+                }
+            </div>
+            @Html.ValidationMessageFor(m => m.ShippingMethod, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.DeliveryNotes)
+                @Html.TextAreaFor(m => m.DeliveryNotes, 3, 10, new { @class = "form-control", placeholder = "Delivery instructions (optional)" })
+                @Html.ValidationMessageFor(m => m.DeliveryNotes, "", new { @class = "text-danger" })
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">Continue to Payment &raquo;</button>
+            <a href="@Url.Action("Address")" class="btn btn-default btn-lg">&laquo; Back</a>
+        }
+    </div>
+    <div class="col-md-5">
+        @Html.Partial("_CartSummary", cart)
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

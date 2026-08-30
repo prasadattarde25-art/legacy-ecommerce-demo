@@ -1,0 +1,50 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#store-nav" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="@Url.Action("Index", "Home")">&#128722; Legacy Store</a>
+        </div>
+        <div class="collapse navbar-collapse" id="store-nav">
+            <ul class="nav navbar-nav">
+                <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                <li>@Html.ActionLink("Products", "Index", "Product")</li>
+                <li>@Html.ActionLink("Cart", "Index", "Cart")</li>
+            </ul>
+            @using (Html.BeginForm("Index", "Product", FormMethod.Get, new { @class = "navbar-form navbar-left" }))
+            {
+                <div class="form-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search products..." />
+                </div>
+                <button type="submit" class="btn btn-default">Search</button>
+            }
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <div id="mini-cart-container">
+                        @Html.Action("MiniCart", "Cart")
+                    </div>
+                </li>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li>@Html.ActionLink("Hi, " + User.Identity.Name, "Orders", "Account")</li>
+                    <li>
+                        @using (Html.BeginForm("Logout", "Account", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link navbar-btn">Log out</button>
+                        }
+                    </li>
+                }
+                else
+                {
+                    <li>@Html.ActionLink("Log in", "Login", "Account")</li>
+                    <li>@Html.ActionLink("Register", "Register", "Account")</li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>

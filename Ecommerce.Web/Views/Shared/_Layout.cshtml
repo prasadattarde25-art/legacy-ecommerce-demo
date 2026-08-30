@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewBag.Title - Legacy Store</title>
+    @Styles.Render("~/Content/css")
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <!-- Hidden anti-forgery form; its token is reused for all AJAX posts. -->
+    <form id="__antiForgeryForm" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+
+    @Html.Partial("_Header")
+
+    <div class="container body-content">
+        @if (ViewBag.FullWidth == true)
+        {
+            @RenderBody()
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-md-3">
+                    @Html.Action("Sidebar", "Product")
+                </div>
+                <div class="col-md-9">
+                    @RenderBody()
+                </div>
+            </div>
+        }
+    </div>
+
+    @Html.Partial("_Footer")
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqueryajax")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        $(function () {
+            // Legacy global AJAX setup: anti-forgery token is sent as a POST
+            // form field (this MVC version validates the field, not the header).
+            var token = $('input[name="__RequestVerificationToken"]').first().val();
+            if (token) {
+                $.ajaxPrefilter(function (options) {
+                    if ((options.type || 'POST').toLowerCase() === 'post') {
+                        if (typeof options.data === 'string') {
+                            options.data += '&__RequestVerificationToken=' + encodeURIComponent(token);
+                        } else if (options.data) {
+                            options.data = $.param(options.data) + '&__RequestVerificationToken=' + encodeURIComponent(token);
+                        } else {
+                            options.data = '__RequestVerificationToken=' + encodeURIComponent(token);
+                        }
+                    }
+                });
+            }
+
+            // Global add-to-cart (product cards, detail page, home page).
+            $(document).on('click', '.add-to-cart-btn', function () {
+                var btn = $(this);
+                var id = btn.data('product-id');
+                var qty = btn.data('quantity') || 1;
+                if ($('#qty-' + id).length) {
+                    qty = $('#qty-' + id).val() || qty;
+                }
+
+                btn.prop('disabled', true).text('Adding...');
+                $.post('@Url.Action("Add", "Cart")', { productId: id, quantity: qty })
+                    .done(function (data) {
+                        if (data && data.success) {
+                            $('#mini-cart-container').load('@Url.Action("MiniCart", "Cart")');
+                            if (window.onCartUpdated) { window.onCartUpdated(data); }
+                            btn.text('Added!');
+                        } else {
+                            btn.prop('disabled', false).text('Add to Cart');
+                        }
+                    })
+                    .fail(function () {
+                        btn.prop('disabled', false).text('Add to Cart');
+                        alert('Could not add the item to your cart.');
+                    });
+                return false;
+            });
+
+            // Lazy-load category tree children.
+            $(document).on('click', '.category-toggle', function (e) {
+                e.preventDefault();
+                var li = $(this).closest('.category-node');
+                var ul = li.find('.category-children');
+
+                if (ul.find('li').length) {
+                    ul.toggle();
+                    return;
+                }
+
+                $.get('@Url.Action("Subcategories", "Product")', { parentId: li.data('id') })
+                    .done(function (items) {
+                        if (items && items.length) {
+                            $.each(items, function (i, item) {
+                                ul.append('<li><a href="@Url.Action("Index", "Product")?categoryId=' + item.id + '">' + item.name + '</a></li>');
+                            });
+                            ul.show();
+                        } else {
+                            li.find('.category-toggle').hide();
+                        }
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

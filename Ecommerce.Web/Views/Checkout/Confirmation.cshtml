@@ -1,0 +1,81 @@
+@model Ecommerce.Core.Entities.Order
+@{
+    ViewBag.Title = "Order Confirmation";
+    ViewBag.FullWidth = true;
+}
+<div class="jumbotron store-hero">
+    <h1>Thank You!</h1>
+    <p class="lead">Your order has been placed.</p>
+    <p>
+        Order Number: <strong>@Model.OrderNumber</strong><br />
+        Date: @Model.OrderDate.ToString("f")<br />
+        Status: @Model.Status
+    </p>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <h3>Items</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th class="text-right">Unit Price</th>
+                    <th class="text-right">Qty</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var line in Model.Lines)
+                {
+                    <tr>
+                        <td>@line.ProductName</td>
+                        <td>@line.Sku</td>
+                        <td class="text-right">@line.UnitPrice.ToString("C")</td>
+                        <td class="text-right">@line.Quantity</td>
+                        <td class="text-right">@line.LineTotal.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr><th colspan="4" class="text-right">Subtotal</th><td class="text-right">@Model.Subtotal.ToString("C")</td></tr>
+                @if (Model.Discount > 0)
+                {
+                    <tr><th colspan="4" class="text-right">Discount</th><td class="text-right">-@Model.Discount.ToString("C")</td></tr>
+                }
+                <tr><th colspan="4" class="text-right">Shipping</th><td class="text-right">@Model.ShippingTotal.ToString("C")</td></tr>
+                <tr><th colspan="4" class="text-right">Tax</th><td class="text-right">@Model.TaxTotal.ToString("C")</td></tr>
+                <tr class="summary-total"><th colspan="4" class="text-right">Total</th><td class="text-right"><strong>@Model.GrandTotal.ToString("C")</strong></td></tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="col-md-5">
+        <div class="panel panel-default">
+            <div class="panel-heading">Delivery Address</div>
+            <div class="panel-body">
+                @Model.ShipToName<br />
+                @Model.AddressLine1<br />
+                @if (!string.IsNullOrWhiteSpace(Model.AddressLine2)) { @Model.AddressLine2<br /> }
+                @Model.City, @Model.State @Model.PostalCode<br />
+                @Model.Country
+                @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                {
+                    <text><br />Phone: @Model.Phone</text>
+                }
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Payment</div>
+            <div class="panel-body">
+                @Model.PaymentMethod
+                @if (!string.IsNullOrWhiteSpace(Model.TransactionId))
+                {
+                    <br /><small class="text-muted">Txn: @Model.TransactionId</small>
+                }
+            </div>
+        </div>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-default">Continue Shopping</a>
+        <a href="@Url.Action("Orders", "Account")" class="btn btn-default">Order History</a>
+    </div>
+</div>

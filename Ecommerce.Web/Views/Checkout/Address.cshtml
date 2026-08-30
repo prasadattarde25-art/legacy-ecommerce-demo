@@ -1,0 +1,110 @@
+@model Ecommerce.Core.ViewModels.CheckoutAddressViewModel
+@{
+    ViewBag.Title = "Checkout - Address";
+    ViewBag.FullWidth = true;
+    var cart = ViewBag.Cart as Ecommerce.Core.ViewModels.CartViewModel;
+}
+<h1>Checkout</h1>
+
+<ul class="nav nav-pills checkout-steps">
+    <li class="active"><a href="#">1. Address</a></li>
+    <li class="disabled"><a href="#">2. Shipping</a></li>
+    <li class="disabled"><a href="#">3. Payment</a></li>
+</ul>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <h3>Shipping Address</h3>
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.Email)
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.FirstName)
+                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.LastName)
+                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.AddressLine1)
+                @Html.TextBoxFor(m => m.AddressLine1, new { @class = "form-control", placeholder = "Street address" })
+                @Html.ValidationMessageFor(m => m.AddressLine1, "", new { @class = "text-danger" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.AddressLine2)
+                @Html.TextBoxFor(m => m.AddressLine2, new { @class = "form-control", placeholder = "Apartment, suite, etc. (optional)" })
+                @Html.ValidationMessageFor(m => m.AddressLine2, "", new { @class = "text-danger" })
+            </div>
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.City)
+                        @Html.TextBoxFor(m => m.City, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.State)
+                        @Html.TextBoxFor(m => m.State, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.State, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.PostalCode)
+                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Country)
+                        @Html.TextBoxFor(m => m.Country, new { @class = "form-control", placeholder = "US" })
+                        @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Phone)
+                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">Continue to Shipping &raquo;</button>
+            <a href="@Url.Action("Index", "Cart")" class="btn btn-default btn-lg">Back to Cart</a>
+        }
+    </div>
+    <div class="col-md-5">
+        @Html.Partial("_CartSummary", cart)
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

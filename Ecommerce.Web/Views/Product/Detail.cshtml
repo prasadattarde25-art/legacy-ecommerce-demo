@@ -1,0 +1,95 @@
+@model Ecommerce.Core.ViewModels.ProductDetailViewModel
+@{
+    ViewBag.Title = Model.Product.Name;
+    var images = Model.Images ?? new List<Ecommerce.Core.Entities.ProductImage>();
+    var primary = images.FirstOrDefault(i => i.IsPrimary) ?? images.FirstOrDefault();
+}
+@section Styles {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" rel="stylesheet" />
+}
+
+<ol class="breadcrumb">
+    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+    <li>@Html.ActionLink("Products", "Index", "Product")</li>
+    @if (Model.Product.Category != null)
+    {
+        <li>@Html.ActionLink(Model.Product.Category.Name, "Index", "Product", new { categoryId = Model.Product.CategoryId }, null)</li>
+    }
+    <li class="active">@Model.Product.Name</li>
+</ol>
+
+<div class="product-detail row">
+    <div class="col-md-5">
+        @if (primary != null)
+        {
+            <a data-fancybox="gallery" href="@primary.Url">
+                <img src="@primary.Url" class="img-responsive product-main-image" alt="@primary.AltText" />
+            </a>
+        }
+        @if (images.Count > 1)
+        {
+            <div class="thumb-strip">
+                @foreach (var image in images)
+                {
+                    <a data-fancybox="gallery" href="@image.Url">
+                        <img src="@image.Url" class="thumb" alt="@image.AltText" />
+                    </a>
+                }
+            </div>
+        }
+    </div>
+    <div class="col-md-7">
+        <h1>@Model.Product.Name</h1>
+        <p class="text-muted">SKU: @Model.Product.Sku</p>
+
+        @if (Model.Product.ListPrice.HasValue && Model.Product.ListPrice > Model.Product.Price)
+        {
+            <span class="price price-old">@Model.Product.ListPrice.Value.ToString("C")</span>
+        }
+        <div class="price price-lg">@Model.Product.Price.ToString("C")</div>
+
+        @if (Model.Variants.Count > 0)
+        {
+            <div class="form-group">
+                <label for="SelectedVariantId">Options</label>
+                @Html.DropDownListFor(m => m.SelectedVariantId,
+                    new SelectList(Model.Variants, "Id", "Name", Model.SelectedVariantId),
+                    "-- Select option --", new { @class = "form-control" })
+            </div>
+        }
+
+        @if (Model.Product.StockQuantity > 0)
+        {
+            <button type="button" class="add-to-cart-btn btn btn-primary btn-lg" data-product-id="@Model.Product.Id">Add to Cart</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-lg btn-default" disabled>Out of Stock</button>
+        }
+
+        <hr />
+        <p>@Html.Raw(Model.Product.Description)</p>
+    </div>
+</div>
+
+@if (Model.RelatedProducts.Any())
+{
+    <h3>Related Products</h3>
+    <div class="row">
+        @foreach (var product in Model.RelatedProducts)
+        {
+            <div class="col-md-3">
+                @Html.Partial("_ProductCard", product)
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js"></script>
+    <script>
+        $(function () {
+            $('[data-fancybox="gallery"]').fancybox();
+        });
+    </script>
+}

@@ -1,0 +1,100 @@
+@model Ecommerce.Core.ViewModels.CheckoutPaymentViewModel
+@{
+    ViewBag.Title = "Checkout - Payment";
+    ViewBag.FullWidth = true;
+    var cart = ViewBag.Cart as Ecommerce.Core.ViewModels.CartViewModel;
+}
+<h1>Checkout</h1>
+
+<ul class="nav nav-pills checkout-steps">
+    <li><a href="@Url.Action("Address")">1. Address</a></li>
+    <li><a href="@Url.Action("Shipping")">2. Shipping</a></li>
+    <li class="active"><a href="#">3. Payment</a></li>
+</ul>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="row">
+    <div class="col-md-7">
+        <h3>Payment</h3>
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="list-group">
+                <label class="list-group-item">
+                    @Html.RadioButtonFor(m => m.PaymentMethod, "CreditCard", new { id = "pm-card" })
+                    <span class="shipping-method-label">Credit / Debit Card</span>
+                </label>
+                <label class="list-group-item">
+                    @Html.RadioButtonFor(m => m.PaymentMethod, "CashOnDelivery")
+                    <span class="shipping-method-label">Cash on Delivery</span>
+                </label>
+            </div>
+            @Html.ValidationMessageFor(m => m.PaymentMethod, "", new { @class = "text-danger" })
+
+            <div id="card-details">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.CardHolderName)
+                    @Html.TextBoxFor(m => m.CardHolderName, new { @class = "form-control", placeholder = "Name as printed on card" })
+                    @Html.ValidationMessageFor(m => m.CardHolderName, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.CardNumber)
+                    @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control", placeholder = "0000 0000 0000 0000" })
+                    @Html.ValidationMessageFor(m => m.CardNumber, "", new { @class = "text-danger" })
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ExpiryMonth)
+                            @Html.DropDownListFor(m => m.ExpiryMonth,
+                                Enumerable.Range(1, 12).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }),
+                                "--", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.ExpiryMonth, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ExpiryYear)
+                            @Html.DropDownListFor(m => m.ExpiryYear,
+                                Enumerable.Range(DateTime.Now.Year, 15).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }),
+                                "--", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.ExpiryYear, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Cvv)
+                            @Html.PasswordFor(m => m.Cvv, new { @class = "form-control", maxlength = "4" })
+                            @Html.ValidationMessageFor(m => m.Cvv, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="place-order-btn" class="btn btn-success btn-lg">Place Order - @cart.GrandTotal.ToString("C")</button>
+            <a href="@Url.Action("Shipping")" class="btn btn-default btn-lg">&laquo; Back</a>
+        }
+    </div>
+    <div class="col-md-5">
+        @Html.Partial("_CartSummary", cart)
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(function () {
+            function toggleCard() {
+                $('#card-details').toggle($('#pm-card').is(':checked'));
+            }
+            $('input[name="PaymentMethod"]').on('change', toggleCard);
+            toggleCard();
+        });
+    </script>
+}

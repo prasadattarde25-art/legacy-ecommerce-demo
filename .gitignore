@@ -1,0 +1,16 @@
+## Build results
+bin/
+obj/
+*.user
+*.suo
+.vs/
+packages/
+TestResults/
+
+## Machine-specific local artifacts
+start-site.bat
+setup-lan-admin.bat
+applicationhost-lan.config
+
+## Logs
+*.log

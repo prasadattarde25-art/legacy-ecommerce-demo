@@ -1,0 +1,68 @@
+@model Ecommerce.Core.ViewModels.CartViewModel
+@{
+    ViewBag.Title = "Cart";
+    ViewBag.FullWidth = true;
+}
+<h1>Your Cart</h1>
+
+@if (!Model.HasItems)
+{
+    <p class="text-muted">Your cart is empty.</p>
+    <a href="@Url.Action("Index", "Product")" class="btn btn-default">Continue Shopping</a>
+}
+else
+{
+    <div id="cart-lines">
+        @Html.Partial("_CartLines", Model)
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            @using (Html.BeginForm("ApplyCoupon", "Cart", FormMethod.Post, new { id = "coupon-form" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="input-group">
+                    <input type="text" name="couponCode" class="form-control" placeholder="Coupon code (try SAVE10)" value="@Model.CouponCode" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">Apply</button>
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <hr />
+    <a href="@Url.Action("Address", "Checkout")" class="btn btn-success btn-lg">Proceed to Checkout &raquo;</a>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#coupon-form').on('submit', function (e) {
+                e.preventDefault();
+                $.post('@Url.Action("ApplyCoupon", "Cart")', { couponCode: $('input[name="couponCode"]').val() })
+                    .done(function (html) { $('#cart-lines').html(html); })
+                    .fail(function () { alert('Could not apply coupon.'); });
+            });
+
+            $(document).on('click', '.cart-update-btn', function () {
+                var productId = $(this).data('product-id');
+                var qty = $('#qty-' + productId).val();
+                $.post('@Url.Action("Update", "Cart")', { productId: productId, quantity: qty })
+                    .done(function (html) {
+                        $('#cart-lines').html(html);
+                        $('#mini-cart-container').load('@Url.Action("MiniCart", "Cart")');
+                    });
+            });
+
+            $(document).on('click', '.cart-remove-btn', function () {
+                var productId = $(this).data('product-id');
+                $.post('@Url.Action("Remove", "Cart")', { productId: productId })
+                    .done(function (html) {
+                        $('#cart-lines').html(html);
+                        $('#mini-cart-container').load('@Url.Action("MiniCart", "Cart")');
+                    });
+            });
+        });
+    </script>
+}
