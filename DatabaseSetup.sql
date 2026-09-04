@@ -28,10 +28,14 @@ GO
 /* --------------------------------------------------------------------------
    Application login used by the connection string:
    Server=.\SQLEXPRESS;Database=LegacyEcommerceDb;User Id=legacy_app_user;...
+
+   The password is supplied via a sqlcmd variable so no secret is committed:
+
+       sqlcmd -S .\SQLEXPRESS -v AppUserPassword="YourPass123!" -i DatabaseSetup.sql
    -------------------------------------------------------------------------- */
 IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'legacy_app_user')
 BEGIN
-    CREATE LOGIN [legacy_app_user] WITH PASSWORD = N'LegacyPass!123',
+    CREATE LOGIN [legacy_app_user] WITH PASSWORD = N'$(AppUserPassword)',
         DEFAULT_DATABASE = [LegacyEcommerceDb], CHECK_POLICY = ON;
 END
 GO
