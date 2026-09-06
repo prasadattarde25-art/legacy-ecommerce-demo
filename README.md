@@ -172,7 +172,7 @@ Everything sensitive lives in **environment variables** (or your secret manager)
 | `ConnectionStrings__EcommerceDb` | SQL Server connection string (user + real password) | ✅ to reach the DB |
 | `Jwt__Key` | Long random HS256 signing key for JWTs | ✅ strongly recommended |
 | `OpenRouter__ApiKey` | OpenRouter API key (e.g. `sk-or-v1-…`) | ✅ for the AI assistant |
-| `OpenRouter__Model` | Model id, e.g. `minimax/minimax-m3:free` | optional (has default) |
+| `OpenRouter__Model` | Model id, e.g. `meta-llama/llama-3.1-8b-instruct` | optional (has default) |
 | `OpenRouter__BaseUrl` | `https://openrouter.ai/api/v1` | optional (has default) |
 
 Example (PowerShell):
@@ -307,7 +307,7 @@ The script hits the public endpoints (featured products, categories, product det
 
 - **Client** (backend): `src/Ecommerce.WebApi/Services/AiService.cs` — minimal OpenAI-compatible client for `POST {BaseUrl}/chat/completions`.
 - **Controller**: `src/Ecommerce.WebApi/Controllers/AiController.cs` — injects a store system prompt (coupon `SAVE10`, free shipping ≥ $75) and returns `{ success, role: "assistant", content }`.
-- **Config**: `OpenRouter:BaseUrl` / `OpenRouter:Model` (default `minimax/minimax-m3:free`) / `OpenRouter:ApiKey` (env var only).
+- **Config**: `OpenRouter:BaseUrl` / `OpenRouter:Model` (default `meta-llama/llama-3.1-8b-instruct`) / `OpenRouter:ApiKey` (env var only).
 - **Error handling**: missing key or upstream failures surface as a clear message (HTTP 502) that the Vue assistant view renders instead of crashing.
 - **Frontend**: `client/src/views/AssistantView.vue` — chat UI calling `POST /api/ai/chat`.
 
@@ -316,7 +316,7 @@ The script hits the public endpoints (featured products, categories, product det
 ## ⚠ Notes
 
 - The original .NET Framework 4.7 MVC 5 project still exists at the repo root (`Ecommerce.Web/`, with `Ecommerce.Core/`, `Ecommerce.Data/`, `Ecommerce.Services/`) for reference; the active implementation is `src/` + `client/`.
-- The `appsettings.json` `OpenRouter:Model` config value is `minimax/minimax-m3:free`; the in-code fallback (when the config key is unset) is `meta-llama/llama-3.1-8b-instruct:free`.
+- The `appsettings.json` `OpenRouter:Model` config value is `meta-llama/llama-3.1-8b-instruct`; the in-code fallback (when the config key is unset) is `meta-llama/llama-3.1-8b-instruct:free`.
 - Free OpenRouter models can be rate-limited (HTTP 429) and occasionally return empty replies — fine for demos; for production use a paid model and proper retries.
 - SQL Server Express has a 10 GB database cap and no SQL Agent — schedule index maintenance and backups with Task Scheduler + `sqlcmd` scripts.
 
