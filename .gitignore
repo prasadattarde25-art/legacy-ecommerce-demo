@@ -14,3 +14,9 @@ applicationhost-lan.config
 
 ## Logs
 *.log
+
+## Local / environment files (never committed)
+*.local
+.env
+.env.*
+!.env.example

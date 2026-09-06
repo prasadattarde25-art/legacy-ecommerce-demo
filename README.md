@@ -1,15 +1,14 @@
 # 🛒 Legacy eCommerce Platform
 
-**A classic, monolithic eCommerce storefront on .NET Framework 4.7 — ASP.NET MVC 5, Razor views, jQuery, EF 6 and SQL Server Express.**
+**A modern eCommerce storefront — ASP.NET Core (.NET 10) REST API backend + Vue 3 SPA frontend, with an AI shopping assistant powered by OpenRouter.**
 
-![.NET Framework 4.7](https://img.shields.io/badge/.NET-4.7-512BD4)
-![ASP.NET MVC 5](https://img.shields.io/badge/ASP.NET-MVC%205-6ba81d)
-![Razor](https://img.shields.io/badge/Views-Razor%20(.cshtml)-2c3e50)
-![Entity Framework](https://img.shields.io/badge/Entity%20Framework-6.4.4-68217A)
-![jQuery](https://img.shields.io/badge/jQuery-3.4.1-0769AD)
+![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)
+![ASP.NET Core WebApi](https://img.shields.io/badge/ASP.NET%20Core-WebApi-512BD4)
+![Vue 3](https://img.shields.io/badge/Vue-3.5-42b883)
+![Vite](https://img.shields.io/badge/Vite-8-646cff)
+![Entity Framework Core](https://img.shields.io/badge/Entity%20Framework%20Core-10-68217A)
 ![SQL Server Express](https://img.shields.io/badge/SQL%20Server-Express%202022-CC2927)
-![IIS Express](https://img.shields.io/badge/IIS%20Express-10.0-0078D6)
-![Status](https://img.shields.io/badge/status-stable-brightgreen)
+![OpenRouter](https://img.shields.io/badge/AI-OpenRouter-orange)
 
 ---
 
@@ -18,55 +17,54 @@
 | Access | URL |
 | --- | --- |
 | **Public (any network)** | **[https://quarry-bankroll-juicy.ngrok-free.dev](https://quarry-bankroll-juicy.ngrok-free.dev)** |
-| Local (this machine) | http://localhost:50861/ |
-| LAN (same network) | http://192.168.31.183:50861/ |
+| Local frontend (Vite dev server) | http://localhost:5173 |
+| Local backend (WebApi) | http://localhost:5295 |
+| Swagger / OpenAPI | http://localhost:5295/openapi/v1.json |
 
-> **Demo login:** `demo@legacy.store` / `Password123!` — coupon code `SAVE10` gives −10%.
-> The public URL comes from an `ngrok http 50861` tunnel; it **changes every time the tunnel restarts**, so regenerate it before each demo.
+> **Demo login:** `demo@legacy.store` / `Password123!` — coupon code `SAVE10` gives −10%, free shipping on orders over **$75**.
+> The public URL comes from an `ngrok http 5173` tunnel; it **changes every time the tunnel restarts**, so regenerate it before each demo (see [Running Locally](#-running-locally)).
 
 ---
 
 ## 📌 Overview
 
-Server-side rendered MVC 5 application with Razor `.cshtml` templates generating full HTML pages. jQuery (3.4.1) enhances the UX via AJAX — cart updates, product filtering and lazy category trees — without any SPA framework. Data access is Entity Framework 6 (Repository + UnitOfWork) against **SQL Server Express**, hosted on **IIS Express** for local development and full **IIS** (CLR v4.0 integrated app pool) for production. Dependency wiring uses the **Unity DI container**.
+A full-stack rewrite of the original .NET Framework 4.7 / MVC 5 / jQuery storefront. The legacy MVC presentation layer was replaced with a **Vue 3 single-page application**, and the backend was migrated to a clean **ASP.NET Core .NET 10 Web API** serving JSON. The existing layered architecture (Core contracts → Services → Repository → EF DbContext) was preserved, along with the same SQL Server Express database schema.
 
 |                         |                     |
 | ----------------------- | ------------------- |
-| **Pattern**             | ASP.NET MVC 5 (Model-View-Controller), Service Layer + Repository |
-| **View engine**         | Razor (`.cshtml`), partials + child actions |
-| **Clientside**          | jQuery 3.4.1, jQuery UI 1.12.1, jQuery Validate, Unobtrusive AJAX, DataTables, Fancybox 3 |
-| **Data access**         | Entity Framework 6.4.4 (`System.Data.SqlClient`) |
-| **Container**           | Unity 4 (legacy) — per-request lifetime |
-| **Auth**                | OWIN cookie authentication (no third-party identity provider) |
-| **Runtime**             | .NET Framework 4.7 / 4.8, ASP.NET MVC 5.2.7 |
+| **Frontend**            | Vue 3 (Composition API), Vue Router 4, Pinia, Axios, Vite 8 |
+| **Backend**             | ASP.NET Core Web API on .NET 10, minimal APIs not used — MVC controllers |
+| **Data access**         | Entity Framework Core 10 + SQL Server Express |
+| **Auth**                | JWT bearer tokens (stateless), `[Authorize]` on protected endpoints |
+| **AI assistant**        | OpenRouter gateway (OpenAI-compatible chat completion API) |
+| **Container**           | Built-in .NET dependency injection (no third-party DI) |
+| **API docs**            | `Microsoft.AspNetCore.OpenApi` (OpenAPI 3.0 JSON at `/openapi/v1.json`) |
 
 ---
 
-## 🏛 Application Architecture
+## 🏛 Architecture
 
 ```mermaid
 flowchart TB
-    B[Browser<br/>jQuery 3.4.1]
-    B -->|Razor HTML pages| C
+    B[Browser<br/>Vue 3 SPA · Vite dev server :5173]
+    B -->|HTTP /api/*  proxied by Vite| API
 
-    subgraph WEB[Ecommerce.Web — MVC 5 + Razor + jQuery + Unity]
-        C[Controllers<br/>Home / Product / Cart / Checkout / Account]
-        V[Razor Views + ViewModels]
-        M[MiniCart child action]
+    subgraph API[Ecommerce.WebApi — ASP.NET Core .NET 10 · :5295]
+        C[Controllers<br/>Home / Products / Cart / Checkout / Account / Ai]
+        AI[Services<br/>TokenService, AiService]
     end
 
-    C -->|ViewModels| V
-    C -->|services injected via Unity| SVC
+    C -->|services| SVC
 
     subgraph SVC[Ecommerce.Services — business rules]
         CA[CatalogService]
         CT[CartService]
         CO[CheckoutService]
         AC[AccountService]
-        PR[PriceCalculator]
+        PH[Security/PasswordHasher]
     end
 
-    subgraph DATA[Ecommerce.Data — EF6 only]
+    subgraph DATA[Ecommerce.Data — EF Core only]
         R[Repositories]
         UOW[UnitOfWork]
         DC[EcommerceDbContext]
@@ -82,220 +80,161 @@ flowchart TB
         E[Entities]
         I[Repository / Service Interfaces]
         VM[ViewModels]
+        CM[Common: PagedResult, ServiceResult]
     end
 
     R --> CORE
-    V --> CORE
+    AI -->|HTTP chat completions| OR[(OpenRouter API<br/>hosted LLM models)]
     style CORE fill:#f4f4f4,stroke:#666
-    style WEB fill:#eaf2fa,stroke:#4582b9
+    style API fill:#eaf2fa,stroke:#4582b9
     style SVC fill:#eaf2fa,stroke:#4582b9
     style DATA fill:#eaf2fa,stroke:#4582b9
     style DB fill:#fdf6e3,stroke:#b58900
+    style OR fill:#fdf6e3,stroke:#b58900
 ```
 
-**Rules the architecture enforces:**
+**Layout rules:**
 
-- **Controllers never talk to EF.** They bind input, call a service, and return a `View` / `PartialView` / `JsonResult`.
-- **Views bind to ViewModels, never EF entities.** `_ProductCard.cshtml` takes a `ProductCardViewModel`, keeping designer/EDMX types out of the UI boundary (important for a future .NET 8 + Vue rewrite).
-- **Repositories are the only types that touch `DbContext`.** All reads/writes flow `Controller → Service → Repository → EcommerceDbContext`.
-- Dependency direction is strictly inward: `Ecommerce.Web → Ecommerce.Services → Ecommerce.Data → Ecommerce.Core`. `Ecommerce.Core` has zero references to EF, MVC, jQuery or `HttpContext`.
+- **Controllers never touch EF.** They bind input/view-models, call a service, and return JSON.
+- **Repositories are the only types that touch `DbContext`.**
+- Dependency direction is strictly inward: `WebApi → Services → Data → Core`. `Ecommerce.Core` has zero references to EF, MVC, or `HttpContext`.
+- The **frontend never calls the database** — everything goes through the API (`/api/*`), proxied by Vite in dev.
 
 ---
 
 ## 📁 Solution Structure
 
 ```
-LegacyEcommerce.sln
-├── Ecommerce.Core              // no EF, no MVC — contracts + POCOs + ViewModels
-│   ├── Entities/               Product, Category, ProductImage, ProductVariant,
-│   │                           CartItem, Order, OrderLine, Customer, Address
-│   ├── ViewModels/             ProductList, ProductDetail, ProductCard, Cart,
-│   │                           MiniCart, Checkout (Address/Shipping/Payment),
-│   │                           Login, Register, OrderHistory, OrderSummary
-│   ├── Interfaces/
-│   │   ├── Repositories/       IProduct, ICategory, ICart, IOrder, ICustomer
-│   │   └── Services/           ICatalog, ICart, ICheckout, IAccount
-│   └── Common/                 PagedResult, ServiceResult, ServiceResult<T>
+LegacyEcommerce.slnx
+├── client/                          // Vue 3 SPA
+│   ├── src/
+│   │   ├── main.js                  // app bootstrap (Pinia + Router)
+│   │   ├── App.vue                  // shell: header + sidebar + router-view + footer
+│   │   ├── router/index.js          // routes + auth guards
+│   │   ├── services/api.js          // axios instance (JWT interceptor)
+│   │   ├── stores/                  // auth.js, cart.js (Pinia stores)
+│   │   ├── components/              // AppHeader, AppSidebar, AppFooter, ProductCard
+│   │   └── views/                   // Home, ProductList, ProductDetail, Cart,
+│   │                                // Checkout, OrderConfirmation, OrderHistory,
+│   │                                // Login, Register, Assistant
+│   ├── vite.config.js               // /api proxy → localhost:5295, ngrok allowedHosts
+│   └── index.html
 │
-├── Ecommerce.Data              // EF 6 only — DbContext + repository implementations
-│   ├── EcommerceDbContext.cs
-│   ├── Repositories/           Product, Category, Cart, Order, Customer
-│   └── Infrastructure/         UnitOfWork.cs
-│
-├── Ecommerce.Services          // business rules — no HttpContext, no Razor
-│   ├── CatalogService.cs  CartService.cs  CheckoutService.cs  AccountService.cs
-│   ├── Pricing/PriceCalculator.cs         // shipping tiers, coupon %, tax 8%
-│   └── Security/PasswordHasher.cs         // PBKDF2 (10k iters, SHA-256)
-│
-└── Ecommerce.Web               // MVC 5 + Razor + jQuery + Unity
-    ├── App_Start/              BundleConfig, FilterConfig, RouteConfig,
-    │                           UnityConfig, Startup.Auth.cs
-    ├── Controllers/            Home, Product, Cart, Checkout, Account
-    ├── Filters/                AjaxValidateAntiForgeryTokenAttribute.cs
-    ├── Helpers/                CartSessionHelper.cs
-    ├── Views/                  Shared (layout, header, footer, sidebar,
-    │                           minicart, product card) · module views
-    ├── Content/  Scripts/      Bootstrap 3, jQuery UI, jQuery Validate,
-    │                           DataTables, Fancybox — vendored, offline-safe
-    ├── Global.asax.cs  Startup.cs
-    └── web.config
+└── src/
+    ├── Ecommerce.Core/              // contracts + POCOs + ViewModels (no EF/MVC)
+    ├── Ecommerce.Data/              // EF Core DbContext + repositories + UnitOfWork
+    ├── Ecommerce.Services/          // business rules + PasswordHasher
+    └── Ecommerce.WebApi/            // .NET 10 Web API
+        ├── Controllers/             // Home, Products, Cart, Checkout, Account, Ai
+        ├── Helpers/                 // CartSessionHelper (cookie-based cart id/coupon)
+        ├── Services/                // TokenService (JWT), AiService (OpenRouter)
+        ├── Program.cs               // DI, EF, JWT auth, CORS
+        └── appsettings.json         // placeholders only — secrets via env vars
+
+DatabaseSetup.sql                    // schema + seed (single source of truth)
+scripts/smoke-test.ps1               // automated API smoke tests
 ```
 
 ---
 
-## 📦 Layer Responsibilities
+## 🧩 Core Modules & API Endpoints
 
-| Layer | Owns | Never |
-| ----- | ---- | ----- |
-| **Ecommerce.Core** | POCOs matching SQL tables, ViewModels, all repository/service interfaces, `PagedResult`/`ServiceResult` | EF, MVC, jQuery, `HttpContext` |
-| **Ecommerce.Data** | `EcommerceDbContext`, repository implementations (LINQ, `.Include()`, `SaveChanges`), `UnitOfWork` | Controllers, business rules, session |
-| **Ecommerce.Services** | Use-cases: add to cart, apply coupon, place order, register/login, order history; maps entities → ViewModels; PBKDF2 hashing | SQL, `HttpContext`, Razor |
-| **Ecommerce.Web** | Thin controllers, Razor views (bind ViewModels), session cart key, OWIN identity, Unity wiring per request | Direct SQL, EF queries |
+| Module | Endpoint(s) | Notes |
+| ------ | ----------- | ----- |
+| **Home / Catalog** | `GET /api/home/featured` · `GET /api/products` (page, categoryId, q) · `GET /api/products/{id}` · `GET /api/categories` · `GET /api/categories/{id}/subcategories` | Public |
+| **Cart** | `GET /api/cart` · `POST /api/cart/add` · `POST /api/cart/update` · `POST /api/cart/remove` · `POST /api/cart/coupon` · `DELETE /api/cart` | Public; cart identity via `cart_id` cookie; lines persisted in `CartItems` |
+| **Checkout** | `POST /api/checkout` · `GET /api/checkout/{id}` · `GET /api/checkout/orders` | `[Authorize]` — JWT required |
+| **Account** | `POST /api/account/login` · `POST /api/account/register` · `POST /api/account/logout` · `GET /api/account/orders` | login/register public; logout/orders `[Authorize]` |
+| **AI Assistant** | `POST /api/ai/chat` | Public; forwards the conversation to OpenRouter with a store system prompt |
 
----
-
-## 🧩 Core Modules
-
-| Module | Flow | ViewModels |
-| ------ | ---- | ---------- |
-| **Catalog** | `ProductController` → `ICatalogService` → `ProductRepository` + `CategoryRepository` | `ProductListViewModel`, `ProductDetailViewModel`, `ProductCardViewModel` |
-| **Cart** | `CartController` (MiniCart child action + AJAX add/update/remove/coupon) → `ICartService` reads/writes session | `CartViewModel`, `MiniCartViewModel` |
-| **Checkout** | Wizard: Address → Shipping → Payment → Confirmation; `ICheckoutService.PlaceOrder()` creates `Order` + `OrderLine`; anti-forgery on every POST | `CheckoutAddressViewModel`, `CheckoutShippingViewModel`, `CheckoutPaymentViewModel`, `OrderSummaryViewModel` |
-| **Account** | OWIN cookie auth; `IAccountService` (register/login/logout) + `IOrderRepository` for history | `LoginViewModel`, `RegisterViewModel`, `OrderHistoryViewModel` |
+**API responses** are camelCase JSON with reference-cycle handling; protected endpoints return `401` without a valid bearer token. Error payloads use `{ success, message }`.
 
 ---
 
-## 📄 Razor Template Hierarchy
-
-```
-~/Views/Shared/_Layout.cshtml
-├── _Header.cshtml       (logo, search, mini cart)   ← @Html.Partial("_Header")
-├── _RenderBody()        (main content area)
-├── _Sidebar.cshtml      (category menu, lazy-loaded tree)  ← @Html.Action("Sidebar","Product")
-└── _Footer.cshtml       (@Html.Partial("_Footer"))
-
-Layout renders:  @Styles.Render("~/Content/css")
-                 @Scripts.Render("~/bundles/jquery") / jqueryval / jqueryajax / bootstrap
-                 @RenderSection("Scripts", required: false)
-```
-
-**Razor + AJAX integration**
-
-| Pattern | Implementation |
-| --- | --- |
-| Product filtering | jQuery intercepts the filter form, AJAX GET to `/Product/Filter`, partial `_ProductList` replaces `#product-grid` |
-| Mini cart | Layout child action `@Html.Action("MiniCart","Cart")`; after an add, `$('#mini-cart-container').load('/Cart/MiniCart')` |
-| Add to cart | `$.post('/Cart/Add', { productId, quantity })` — no page refresh; badge + totals update via the partial |
-| Image gallery | `[data-fancybox="gallery"]` + Fancybox 3 (vendored, offline) |
-| Order history | jQuery **DataTables** (sortable, column `order: [[1,'desc']]`) |
-| Page JS | `@section Scripts { }` per view, rendered after the bundles |
-
----
-
-## 🗄 Data Access — EF 6 + SQL Server Express
-
-```
-Controller → Service → Repository → EcommerceDbContext → .\SQLEXPRESS · LegacyEcommerceDb
-```
-
-- **EF 6.4.4** mappings are defined in code (`EcommerceDbContext` + annotations); `DatabaseSetup.sql` is the single source of truth for the schema and seed data.
-- **Connection string** `EcommerceDb` (provider `System.Data.SqlClient`, app login `legacy_app_user`, `MultipleActiveResultSets=True`).
-- Repository pattern avoids N+1 via `.Include()` on listing/detail queries.
-- One `SaveChanges()` per HTTP request through `UnitOfWork`.
-- **SQL Server Express** instance `.\SQLEXPRESS`, database **`LegacyEcommerceDb`** (10 GB Express cap, ~1.4 GB buffer pool, no SQL Agent — maintenance via scripts).
-
-```xml
-<connectionStrings>
-  <add name="EcommerceDb"
-       connectionString="Server=.\SQLEXPRESS;Database=LegacyEcommerceDb;
-                         User Id=legacy_app_user;Password=****;MultipleActiveResultSets=True;"
-       providerName="System.Data.SqlClient" />
-</connectionStrings>
-```
-
----
-
-## 🔐 Security
+## 🔐 Authentication & Security
 
 | Concern | Implementation |
 | --- | --- |
-| **CSRF** | `@Html.AntiForgeryToken()` in every Razor form + `ValidateAntiForgeryToken` on every POST action |
-| **AJAX CSRF** | Global jQuery prefilter appends the token to every POST body; the `AjaxValidateAntiForgeryToken` filter also accepts header tokens for browser compatibility |
-| **Authentication** | OWIN cookie auth (`ApplicationCookie`), `[Authorize]` on protected controllers/pages, `authentication mode="None"` |
-| **Passwords** | PBKDF2 — 10,000 iterations, 16-byte salt, 32-byte hash (`Ecommerce.Services\Security\PasswordHasher.cs`, no plaintext stored) |
-| **Claims** | `AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier` binds tokens to the logged-in user |
-| **Session cart** | Server-side `HttpSessionState` (InProc, 25 min), never trusted from client input |
+| **Authentication** | Stateless JWT bearer tokens (HS256) issued by `POST /api/account/login|register`; validated by ASP.NET Core JwtBearer on every call |
+| **Authorization** | `[Authorize]` on Checkout/Account endpoints; frontend router guards redirect unauthenticated users to `/login` |
+| **Passwords** | PBKDF2 (`Rfc2898DeriveBytes`, 10,000 iterations, 16-byte salt, 32-byte hash) — `Ecommerce.Services/Security/PasswordHasher.cs`, no plaintext stored |
+| **Cart cookie** | `cart_id` + `cart_coupon` cookies are `HttpOnly` with `SameSite=Lax`; cart is persisted server-side in `CartItems`, never trusted from the client |
+| **Secrets** | No API keys, passwords, or tokens are committed. All sensitive settings are read from environment variables (see below). |
 
 ---
 
-## ⚙ Configuration Highlights (`web.config`)
+## ⚙ Environment Variables
 
-```xml
-<system.web>
-  <compilation debug="false" targetFramework="4.7" />
-  <httpRuntime targetFramework="4.7" maxRequestLength="30720" />
-  <sessionState mode="InProc" timeout="25" />
-  <authentication mode="None" /> <!-- OWIN handles auth -->
-</system.web>
-```
+Everything sensitive lives in **environment variables** (or your secret manager), **not** in `appsettings.json` (which only ships placeholders and safe defaults):
 
----
+| Variable | Purpose | Required |
+| --- | --- | --- |
+| `ConnectionStrings__EcommerceDb` | SQL Server connection string (user + real password) | ✅ to reach the DB |
+| `Jwt__Key` | Long random HS256 signing key for JWTs | ✅ strongly recommended |
+| `OpenRouter__ApiKey` | OpenRouter API key (e.g. `sk-or-v1-…`) | ✅ for the AI assistant |
+| `OpenRouter__Model` | Model id, e.g. `minimax/minimax-m3:free` | optional (has default) |
+| `OpenRouter__BaseUrl` | `https://openrouter.ai/api/v1` | optional (has default) |
 
-## 🧪 Testing & Verification
-
-### Automated smoke test
-
-Runnable anywhere (PowerShell) against a running instance:
+Example (PowerShell):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
-# optional: -BaseUrl http://192.168.x.x:50861
+$env:ConnectionStrings__EcommerceDb = "Server=.\SQLEXPRESS;Database=LegacyEcommerceDb;User Id=legacy_app_user;Password=<your-password>;MultipleActiveResultSets=True;TrustServerCertificate=True;"
+$env:Jwt__Key                 = "<a-long-random-string>"
+$env:OpenRouter__ApiKey       = "<sk-or-v1-…>"
 ```
 
-Verifies: all pages return **200** (home, products, detail, cart, login, register, mini-cart), the real anti-forgery form-field flow for **add-to-cart**, **coupon apply**, and that POSTs **without** a token are rejected.
+> Setting these in the shell before `dotnet run` is enough. For non-interactive deployment use your environment manager (Azure App Settings, GitHub Actions secrets, system environment variables, etc.). Never put real values in `appsettings.json` or commit them.
 
-### End-to-end flows verified (2026-08-31)
+---
 
-| Flow | Result |
-| --- | --- |
-| Build (`MSBuild Ecommerce.Web.csproj`) | exit 0 |
-| Home + product listing/detail/search | 200 |
-| Cart add/update/remove + coupon | 200, correct pricing |
-| Coupon SAVE10 (-10%), free shipping ≥ $75 else $9.95, tax 8% | verified with real order math |
-| Checkout wizard Address → Shipping → Payment → Confirmation | complete order created (`ORD-…`, status Pending) |
-| Order history, register, login, logout | verified (redirects + `[Authorize]` return URL) |
-| AJAX endpoints (`Subcategories`, `Filter`, `MiniCart`) | JSON / partial HTML |
-| DB reads/writes via `legacy_app_user` | verified (Orders + OrderLines rows) |
+## 🗄 Database Setup
 
-### Manual browser checklist
+**Prerequisites:** SQL Server Express (or SQL Server) with mixed-mode / SQL auth enabled.
 
-1. Sign in with the demo account → cart → add items → badge + totals update without refresh.
-2. Apply `SAVE10` → discount appears on subtotal.
-3. Proceed to checkout: Address → Shipping → Payment (`4111 1111 1111 1111`) → Confirmation.
-4. Open `/Account/Orders` → order listed in the DataTable.
-5. Product detail → click gallery thumbnails (Fancybox) opens lightbox.
+Create the database, the application login `legacy_app_user`, all tables, and seed data in one pass:
 
-> **Known limitations (legacy stack):** Razor views compile at runtime (errors surface only when a page is hit); jQuery version conflicts are the main maintenance hazard; Express has a 10 GB DB cap — archive old orders and rebuild indexes weekly (no SQL Agent on Express).
+```powershell
+# SQL auth (recommended for API use):
+sqlcmd -S .\SQLEXPRESS -U sa -P <sa-password> -v AppUserPassword="<your-app-password>" -i DatabaseSetup.sql
+
+# Windows auth (local dev):
+sqlcmd -S .\SQLEXPRESS -E -v AppUserPassword="<your-app-password>" -i DatabaseSetup.sql
+```
+
+> The login password is supplied via the `AppUserPassword` sqlcmd variable — **no secret is stored in the script**. `DatabaseSetup.sql` drops-and-recreates `LegacyEcommerceDb`, so run it only when you intend to reset the database.
+
+Seed data (declared in `DatabaseSetup.sql`): **8 products**, 8 categories (3 roots + children), product images, variants, one demo customer, and one address.
 
 ---
 
 ## 🚀 Running Locally
 
+### 1) Backend — WebApi (:5295)
+
 ```powershell
-# 1. Create the database (one-time)
-sqlcmd -S .\SQLEXPRESS -E -i DatabaseSetup.sql
-
-# 2. Build
-MSBuild.exe LegacyEcommerce.sln /t:Restore /t:Build -m:1
-
-# 3. Serve with IIS Express
-"C:\Program Files\IIS Express\iisexpress.exe" /path:"<repo>\Ecommerce.Web" /port:50861 /clr:v4.0
-
-# 4. Open
-start http://localhost:50861/
+# set environment variables first (see above)
+dotnet run --project src\Ecommerce.WebApi --urls http://localhost:5295
 ```
 
-> On this machine a `start-site.bat` double-click does steps 3+4 (binds `0.0.0.0`, so the site is also reachable on the LAN — e.g. `http://192.168.31.183:50861/`). For demoing to someone on a different network, an ngrok tunnel supplies the public URL: `ngrok http 50861`.
+### 2) Frontend — Vue/Vite dev server (:5173)
+
+```powershell
+cd client
+npm install        # first time only
+npm run dev        # http://localhost:5173 — proxies /api → http://localhost:5295
+```
+
+Open **http://localhost:5173**.
+
+### 3) Public URL (optional, for demos)
+
+The Vite dev server proxy keeps same-origin `/api` calls working through the tunnel, so a single ngrok tunnel to the frontend exposes the whole app:
+
+```powershell
+ngrok http 5173    # copy the https://…ngrok-free.dev URL from the output
+```
+
+> **ngrok free note:** keep the dev server's `allowedHosts` include `'.ngrok-free.dev'` (already set in `client/vite.config.js`) or Vite will reject the unknown host. Visitors see an ngrok interstitial page once — they click **Visit Site**.
 
 ### Demo account
 
@@ -303,25 +242,84 @@ start http://localhost:50861/
 | ----- | ----- |
 | Email | `demo@legacy.store` |
 | Password | `Password123!` |
-
-Order history appears after signing in (`/Account/Orders`).
-
----
-
-## 📦 NuGet & Frontend Dependencies
-
-`Microsoft.AspNet.Mvc 5.2.7` · `Microsoft.AspNet.Razor 3.2.7` · `EntityFramework 6.4.4` · `Unity 4.0.1` · `Microsoft.jQuery.Unobtrusive.Ajax` · `jQuery.Validation` · `Newtonsoft.Json 12.0.3` · Bootstrap 3 · jQuery 3.4.1 · jQuery UI 1.12.1 · DataTables 1.10.21 · Fancybox 3.5.7.
-
-All frontend assets are **vendored** under `Scripts/` and `Content/` (no CDN at runtime → the site runs fully offline).
+| Coupon | `SAVE10` (10% off) |
 
 ---
 
-## ⚠ Notes / Deviations
+## 🔨 Build
 
-- **No `Microsoft.AspNet.Identity`** — lightweight custom `ClaimsIdentity` on OWIN (same wire surface as the spec's "ApplicationUser stays in Web"; passwords PBKDF2-hashed).
-- **EF mappings are code-first** instead of an EDMX designer file (schema identical; `DatabaseSetup.sql` is the source of truth) — nothing designer-generated to drag into a future rewrite.
-- Package versions pinned; NuGet may warn `NU1903` for the old OWIN/Newtonsoft versions (no safe upgrade path on .NET 4.7).
+```powershell
+# Backend (whole solution)
+dotnet build src\Ecommerce.slnx
+
+# Frontend (production bundle to client/dist)
+cd client
+npm run build
+```
+
+Build should complete with **0 warnings, 0 errors**.
 
 ---
 
-🛒 *Legacy eCommerce · .NET 4.7 MVC · Razor Views · jQuery · SQL Server Express · IIS Express (dev) / IIS (prod)*
+## 🧪 Testing / Verification
+
+### API smoke test (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\smoke-test.ps1 -BaseUrl http://localhost:5295
+```
+
+The script hits the public endpoints (featured products, categories, product detail, login) and reports pass/fail per check.
+
+### End-to-end flows verified
+
+| Flow | Result |
+| --- | --- |
+| Backend build (`Ecommerce.slnx`) | 0 errors, 0 warnings |
+| Frontend build (`npm run build`) | passes |
+| Home featured products, category listing, product detail | 200, correct JSON shape |
+| Login (demo) → JWT issued | 200, token validated |
+| Cart add/update/remove + coupon (cookie session) | correct pricing |
+| Coupon `SAVE10` (−10%), free shipping ≥ $75, tax 8% | verified with real order math |
+| Checkout (auth) → order created (`ORD-…`, Pending) | cart cleared after placement |
+| Order confirmation + order history | lines/totals match |
+| **AI assistant** (`POST /api/ai/chat`) via OpenRouter | live reply, store-aware (coupon + shipping) |
+| Public ngrok URL (app + API + AI through the tunnel) | verified |
+
+---
+
+## ⚠ Troubleshooting
+
+| Symptom | Cause / Fix |
+| --- | --- |
+| API: "Unable to connect" on login/cart | API not running, or `ConnectionStrings__EcommerceDb` env var missing/incorrect |
+| API returns `401` on checkout/orders | Not signed in (missing/expired JWT) — log in first |
+| Basic endpoints fail after a restart | The app now reads secrets from env vars only — re-export them before `dotnet run` |
+| AI assistant: "OpenRouter API key is not configured" | `OpenRouter__ApiKey` not set — set it and restart the API |
+| AI assistant: `502` with an OpenRouter status | Model unavailable, rate-limited (429), or key invalid — check the message body; try another model id |
+| ngrok shows a warning page | Normal for free tunnels — click **Visit Site** |
+| ngrok URL returns 502 | Vite dev server stopped, or host not in `allowedHosts` (restart `npm run dev`) |
+| Frontend can't reach API | Dev server must be running so Vite can proxy `/api → localhost:5295` |
+
+---
+
+## 🧾 OpenRouter Integration
+
+- **Client** (backend): `src/Ecommerce.WebApi/Services/AiService.cs` — minimal OpenAI-compatible client for `POST {BaseUrl}/chat/completions`.
+- **Controller**: `src/Ecommerce.WebApi/Controllers/AiController.cs` — injects a store system prompt (coupon `SAVE10`, free shipping ≥ $75) and returns `{ success, role: "assistant", content }`.
+- **Config**: `OpenRouter:BaseUrl` / `OpenRouter:Model` (default `minimax/minimax-m3:free`) / `OpenRouter:ApiKey` (env var only).
+- **Error handling**: missing key or upstream failures surface as a clear message (HTTP 502) that the Vue assistant view renders instead of crashing.
+- **Frontend**: `client/src/views/AssistantView.vue` — chat UI calling `POST /api/ai/chat`.
+
+---
+
+## ⚠ Notes
+
+- The original .NET Framework 4.7 MVC 5 project still exists at the repo root (`Ecommerce.Web/`, with `Ecommerce.Core/`, `Ecommerce.Data/`, `Ecommerce.Services/`) for reference; the active implementation is `src/` + `client/`.
+- The `appsettings.json` `OpenRouter:Model` config value is `minimax/minimax-m3:free`; the in-code fallback (when the config key is unset) is `meta-llama/llama-3.1-8b-instruct:free`.
+- Free OpenRouter models can be rate-limited (HTTP 429) and occasionally return empty replies — fine for demos; for production use a paid model and proper retries.
+- SQL Server Express has a 10 GB database cap and no SQL Agent — schedule index maintenance and backups with Task Scheduler + `sqlcmd` scripts.
+
+---
+
+🛒 *Legacy eCommerce · ASP.NET Core .NET 10 WebApi · Vue 3 SPA · EF Core 10 · SQL Server Express · OpenRouter AI Assistant*
